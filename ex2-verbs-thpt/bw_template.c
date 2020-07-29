@@ -49,6 +49,8 @@
 #include <infiniband/verbs.h>
 
 #define WC_BATCH (10)
+// 16M 
+#define LARGE_BUFF_SIZE 0x1000000
 
 enum {
     PINGPONG_RECV_WRID = 1,
@@ -379,7 +381,9 @@ static struct pingpong_context *pp_init_ctx(struct ibv_device *ib_dev, int size,
     ctx->rx_depth = rx_depth;
     ctx->routs    = rx_depth;
 
-    ctx->buf = malloc(roundup(size, page_size));
+    initialize_buffer(&ctx->buf,LARGE_BUFF_SIZE);
+    // TODO 
+    // ctx->buf = malloc(roundup(size, page_size));
     if (!ctx->buf) {
         fprintf(stderr, "Couldn't allocate work buf.\n");
         return NULL;
@@ -409,7 +413,7 @@ static struct pingpong_context *pp_init_ctx(struct ibv_device *ib_dev, int size,
         return NULL;
     }
 
-    ctx->mr = ibv_reg_mr(ctx->pd, ctx->buf, size, IBV_ACCESS_LOCAL_WRITE);
+    ctx->mr = ibv_reg_mr(ctx->pd, ctx->buf, LARGE_BUFF_SIZE, IBV_ACCESS_LOCAL_WRITE);
     if (!ctx->mr) {
         fprintf(stderr, "Couldn't register MR\n");
         return NULL;
@@ -547,7 +551,7 @@ static int pp_post_send(struct pingpong_context *ctx)
     return ibv_post_send(ctx->qp, &wr, &bad_wr);
 }
 
-int pp_wait_completions(struct pingpong_context *ctx, int iters)
+int pp_wait_completions(struct pingpong_context *ctx, int iters,int check_and_fill)
 {
     int rcnt = 0, scnt = 0;
     while (rcnt + scnt < iters) {
@@ -577,14 +581,9 @@ int pp_wait_completions(struct pingpong_context *ctx, int iters)
                 break;
 
             case PINGPONG_RECV_WRID:
-                if (--ctx->routs <= 10) {
-                    ctx->routs += pp_post_recv(ctx, ctx->rx_depth - ctx->routs);
-                    if (ctx->routs < ctx->rx_depth) {
-                        fprintf(stderr,
-                                "Couldn't post receive (%d)\n",
-                                ctx->routs);
+                if (check_and_fill){
+                    if(check_and_fill_routs(ctx))
                         return 1;
-                    }
                 }
                 ++rcnt;
                 break;
@@ -619,6 +618,81 @@ static void usage(const char *argv0)
     printf("  -g, --gid-idx=<gid index> local port gid index\n");
 }
 
+int check_and_fill_routs(struct pingpong_context* ctx){
+    if (--ctx->routs <= 10) {
+        ctx->routs += pp_post_recv(ctx, ctx->rx_depth - ctx->routs);
+        if (ctx->routs < ctx->rx_depth) {
+            fprintf(stderr,
+                    "Couldn't post receive (%d)\n",
+                    ctx->routs);
+            return 1;
+        }
+    }
+}
+
+int send_once_and_wait_ack(struct pingpong_context* ctx,double* time_in_us){
+    struct timeval tstart,tend;
+    gettimeofday(&tstart,NULL);
+    if (pp_post_send(ctx)) {
+        fprintf(stderr, "Client ouldn't post send\n");
+        return 1;
+    }
+    pp_wait_completions(ctx,2,0);
+    gettimeofday(&tend,NULL);
+    *time_in_us=(tend.tv_sec - tstart.tv_sec) * 1000000 + tend.tv_usec - tstart.tv_usec;
+    return 0;
+}
+
+inline double estimate_throughput(struct pingpong_context* ctx,double RTT){
+    double time_in_us;
+    if(send_once_and_wait_ack(ctx,&time_in_us))
+        exit(-1);
+    return ctx->size/(time_in_us-RTT);
+}
+
+inline double estimate_RTT(struct pingpong_context* ctx){
+    double time_in_us;
+    ctx->size=1;
+    if(send_once_and_wait_ack(ctx,&time_in_us))
+        exit(-1);
+    return time_in_us;
+}
+
+int initialize_buffer(char** pbuffer,int size)
+{
+    *pbuffer = (char*)mmap(0, roundup(size, page_size), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if ((long)*pbuffer == -1) {
+        perror("mmap");
+        exit(1);
+    }
+    memset(*pbuffer, 0, roundup(size, page_size));
+    return 0;
+}
+
+int wait_type_completion(int type){
+    int ne,cnt=0;
+    struct ibv_wc wc[WC_BATCH];
+
+    do {
+        ne = ibv_poll_cq(ctx->cq, WC_BATCH, wc);
+        if (ne < 0) {
+            fprintf(stderr, "poll CQ failed %d\n", ne);
+            return 1;
+        }
+
+    } while (ne < 1);
+
+    if(ne==1&&wc[0].status == IBV_WC_SUCCESS&&type==(int) wc[0].wr_id)
+        return 0;
+    
+    fprintf(stderr, "Failed status ne=%d type=%d %s (%d) for wr_id %d\n",
+                        ne,type,
+                        ibv_wc_status_str(wc[0].status),
+                        wc[0].status, (int) wc[0].wr_id);
+
+    return 1;
+}
+
 int main(int argc, char *argv[])
 {
     struct ibv_device      **dev_list;
@@ -631,8 +705,8 @@ int main(int argc, char *argv[])
     int                      port = 12345;
     int                      ib_port = 1;
     enum ibv_mtu             mtu = IBV_MTU_2048;
-    int                      rx_depth = 100;
-    int                      tx_depth = 100;
+    int                      rx_depth = 400;
+    int                      tx_depth = 400;
     int                      iters = 1000;
     int                      use_event = 0;
     int                      size = 1;
@@ -822,27 +896,54 @@ int main(int argc, char *argv[])
         if (pp_connect_ctx(ctx, ib_port, my_dest.psn, mtu, sl, rem_dest, gidx))
             return 1;
 
+    int itrs=12;
     if (servername) {
-        int i;
-        for (i = 0; i < iters; i++) {
-            if ((i != 0) && (i % tx_depth == 0)) {
-                fprintf(stderr, "client pp_wait_completions...\n");
-                pp_wait_completions(ctx, tx_depth);
-            }
-            if (pp_post_send(ctx)) {
-                fprintf(stderr, "Client ouldn't post send\n");
-                return 1;
-            }
+        int size=1024;
+
+        int i,j;
+        double RTT,throughput;
+        for(i=0;i<itrs;i++){
+
+            // Warm-up and estimate RTT
+            RTT=0;
+            for(j=0;j<5;j++)
+                RTT+=estimate_RTT(ctx);
+            RTT/=5;
+
+            throughput=0;
+            for(j=0;j<10;j++)
+                throughput+=estimate_throughput(ctx,RTT);
+            throughput*=1000000);
+            throughput/=(10*1024*1024);
+            printf("[%d]  %.2f Mbps\n",size,throughput);
+
+            size*=2;
         }
+
         printf("Client Done.\n");
+        // int i;
+        // for (i = 0; i < iters; i++) {
+        //     if ((i != 0) && (i % tx_depth == 0)) {
+        //         fprintf(stderr, "client pp_wait_completions...\n");
+        //         pp_wait_completions(ctx, tx_depth,1);
+        //     }
+        //     if (pp_post_send(ctx)) {
+        //         fprintf(stderr, "Client ouldn't post send\n");
+        //         return 1;
+        //     }
+        // }
+        // printf("Client Done.\n");
     } else {
-        if (pp_post_send(ctx)) {
-            fprintf(stderr, "Server couldn't post send\n");
-            return 1;
+        int i;
+        ctx->size=1;
+        for(i=0;i<itrs*15;i++){
+            wait_type_completion(PINGPONG_RECV_WRID);
+            pp_post_send(ctx);
+            wait_type_completion(PINGPONG_SEND_WRID);
         }
-        pp_wait_completions(ctx, iters);
         printf("Server Done.\n");
     }
+    
 
     ibv_free_device_list(dev_list);
     free(rem_dest);
