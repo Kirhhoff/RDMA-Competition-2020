@@ -45,6 +45,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <time.h>
+#include <sys/mman.h>
 
 #include <infiniband/verbs.h>
 
@@ -669,7 +670,7 @@ int initialize_buffer(char** pbuffer,int size)
     return 0;
 }
 
-int wait_type_completion(int type){
+int wait_type_completion(struct pingpong_context* ctx, int type){
     int ne,cnt=0;
     struct ibv_wc wc[WC_BATCH];
 
@@ -913,7 +914,7 @@ int main(int argc, char *argv[])
             throughput=0;
             for(j=0;j<10;j++)
                 throughput+=estimate_throughput(ctx,RTT);
-            throughput*=1000000);
+            throughput*=1000000;
             throughput/=(10*1024*1024);
             printf("[%d]  %.2f Mbps\n",size,throughput);
 
