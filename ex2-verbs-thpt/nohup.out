@@ -1,0 +1,98 @@
+pp_init_ctx...
+pp_post_recv...
+[server_xchg]	read msg 006f:000197:d4fb73:00000000000000000000000000000000, sizeof msg 52
+[server_xchg]	sending msg 00a2:0001aa:de250c:00000000000000000000000000000000, sizeof msg 52
+[server_xchg]	sendt msg 00a2:0001aa:de250c:00000000000000000000000000000000, sizeof msg 52
+mlx5: jupiter022.hpcadvisorycouncil.com: got completion with error:
+00000000 00000000 00000000 00000000
+00000000 00000000 00000000 00000000
+00000000 00000000 00000000 00000000
+00000000 0000d701 000001aa 00056fe2
+Failed status local length error (1) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 1
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2
+Failed status Work Request Flushed Error (5) for wr_id 2

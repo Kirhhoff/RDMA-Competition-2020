@@ -694,6 +694,11 @@ int wait_type_completion(struct pingpong_context* ctx, int type){
     return 1;
 }
 
+void clean_cq(struct pingpong_context* ctx){
+    struct ibv_wc wc[WC_BATCH];
+    ibv_poll_cq(ctx->cq, WC_BATCH, wc);
+}
+
 int main(int argc, char *argv[])
 {
     struct ibv_device      **dev_list;
@@ -897,6 +902,7 @@ int main(int argc, char *argv[])
         if (pp_connect_ctx(ctx, ib_port, my_dest.psn, mtu, sl, rem_dest, gidx))
             return 1;
 
+    clean_cq(ctx);
     int itrs=12;
     if (servername) {
         int size=1024;
@@ -910,7 +916,7 @@ int main(int argc, char *argv[])
             for(j=0;j<5;j++)
                 RTT+=estimate_RTT(ctx);
             RTT/=5;
-
+            ctx->size=size;
             throughput=0;
             for(j=0;j<10;j++)
                 throughput+=estimate_throughput(ctx,RTT);
@@ -938,9 +944,11 @@ int main(int argc, char *argv[])
         int i;
         ctx->size=1;
         for(i=0;i<itrs*15;i++){
-            wait_type_completion(PINGPONG_RECV_WRID);
+            pp_wait_completions(ctx,1,0);
+            //wait_type_completion(ctx,PINGPONG_RECV_WRID);
             pp_post_send(ctx);
-            wait_type_completion(PINGPONG_SEND_WRID);
+            //wait_type_completion(ctx,PINGPONG_SEND_WRID);
+            pp_wait_completions(ctx,1,0);
         }
         printf("Server Done.\n");
     }
